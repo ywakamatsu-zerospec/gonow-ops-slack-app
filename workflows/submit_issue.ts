@@ -1,4 +1,7 @@
-import { DefineWorkflow, Schema } from "deno-slack-sdk/mod.ts";
+import {
+  DefineWorkflow,
+  Schema,
+} from "https://deno.land/x/deno_slack_sdk@2.6.0/mod.ts";
 import { PostIssueMessage } from "../functions/post_issue_message.ts";
 
 /**

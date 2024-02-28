@@ -13,7 +13,6 @@
       "workflows"
     ]
   },
-  "importMap": "import_map.json",
   "lint": {
     "include": [
       "datastores",
