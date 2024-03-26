@@ -8,12 +8,15 @@ export const GetVersions = DefineFunction({
   source_file: "functions/get_versions.ts",
   input_parameters: {
     properties: {
-      service_name: {
+      interactivity: {
+        type: Schema.slack.types.interactivity,
+      },
+      serviceName: {
         type: Schema.types.string,
-        description: "Severity of the issue",
+        description: "service name",
       },
     },
-    required: ["service_name"],
+    required: ["serviceName"],
   },
   output_parameters: {
     properties: {
@@ -22,6 +25,9 @@ export const GetVersions = DefineFunction({
         items: {
           type: Schema.types.string,
         },
+      },
+      interactivity: {
+        type: Schema.slack.types.interactivity,
       },
     },
     required: ["versions"],
@@ -37,13 +43,15 @@ export const GetVersions = DefineFunction({
 export default SlackFunction(
   GetVersions,
   async ({ inputs, env }) => {
-    const { service_name } = inputs;
+    const { serviceName, interactivity } = inputs;
+    console.log(serviceName);
     try {
       const client = new Client(env);
-      const versions = await client.getVersions(service_name);
+      const versions = await client.getVersions(serviceName);
 
+      console.log(versions);
       return {
-        outputs: { versions },
+        outputs: { versions, interactivity },
       };
     } catch (e) {
       console.log(e);

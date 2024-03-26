@@ -21,6 +21,7 @@ export default Manifest({
   ],
   outgoingDomains: [
     "dynamodb.ap-northeast-1.amazonaws.com",
+    "api.github.com",
   ],
   botScopes: ["commands", "chat:write", "chat:write.public"],
 });
