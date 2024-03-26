@@ -29,7 +29,7 @@ const getServices = ReleaseWorkflow.addStep(
 const serviceSelection = ReleaseWorkflow.addStep(
   Schema.slack.functions.OpenForm,
   {
-    title: "Release GoNOW service",
+    title: "Select GoNOW service",
     interactivity: getServices.outputs.interactivity,
     submit_label: "選択",
     fields: {
@@ -49,6 +49,24 @@ const getVersions = ReleaseWorkflow.addStep(
   {
     interactivity: serviceSelection.outputs.interactivity,
     serviceName: serviceSelection.outputs.fields.serviceName,
+  },
+);
+
+const versionSelection = ReleaseWorkflow.addStep(
+  Schema.slack.functions.OpenForm,
+  {
+    title: "Select version",
+    interactivity: getVersions.outputs.interactivity,
+    submit_label: "リリース",
+    fields: {
+      elements: [{
+        name: "version",
+        title: "バージョン",
+        type: Schema.types.string,
+        enum: getVersions.outputs.versions,
+      }],
+      required: ["version"],
+    },
   },
 );
 
