@@ -1,6 +1,8 @@
-import { Manifest } from "https://deno.land/x/deno_slack_sdk@2.6.0/mod.ts";
+import { Manifest } from "deno_slack_sdk/mod.ts";
 import { PostIssueMessage } from "./functions/post_issue_message.ts";
-import SubmitIssueWorkflow from "./workflows/submit_issue.ts";
+import ReleaseWorkflow from "./workflows/release.ts";
+import { GetServices } from "./functions/get_services.ts";
+import { GetVersions } from "./functions/get_versions.ts";
 
 /**
  * The app manifest contains the app's configuration. This
@@ -11,8 +13,14 @@ export default Manifest({
   name: "gonow-ops-slack-app",
   description: "A basic sample that demonstrates issue submission to channel",
   icon: "assets/default_new_app_icon.png",
-  workflows: [SubmitIssueWorkflow],
-  functions: [PostIssueMessage],
-  outgoingDomains: [],
+  workflows: [ReleaseWorkflow],
+  functions: [
+    GetServices,
+    GetVersions,
+    PostIssueMessage,
+  ],
+  outgoingDomains: [
+    "dynamodb.ap-northeast-1.amazonaws.com",
+  ],
   botScopes: ["commands", "chat:write", "chat:write.public"],
 });

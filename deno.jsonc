@@ -26,6 +26,14 @@
     ]
   },
   "lock": false,
+  "imports": {
+    "@aws-sdk/client-dynamodb": "npm:@aws-sdk/client-dynamodb@3.540.0",
+    "@aws-sdk/lib-dynamodb": "npm:@aws-sdk/lib-dynamodb@3.540.0",
+    "@octokit/rest": "npm:@octokit/rest@20.0.2",
+    "deno_slack_api/mod.ts": "https://deno.land/x/deno_slack_api@2.2.0/mod.ts",
+    "deno_slack_sdk/mod.ts": "https://deno.land/x/deno_slack_sdk@2.6.0/mod.ts",
+    "deno_slack_sdk/types.ts": "https://deno.land/x/deno_slack_sdk@2.6.0/types.ts"
+  },
   "tasks": {
     "test": "deno fmt --check && deno lint && deno test --allow-read --allow-none"
   }
