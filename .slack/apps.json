@@ -1,1 +1,11 @@
-{}
+{
+  "apps": {
+    "THBJT2GSY": {
+      "app_id": "A076FDRF5HN",
+      "IsDev": false,
+      "team_domain": "zero-spec",
+      "team_id": "THBJT2GSY"
+    }
+  },
+  "default": "zero-spec"
+}

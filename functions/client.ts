@@ -1,20 +1,26 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
-  DynamoDBDocumentClient,
-  GetCommand,
-  ScanCommand,
-} from "@aws-sdk/lib-dynamodb";
+  CodePipelineClient,
+  StartPipelineExecutionCommand,
+} from "@aws-sdk/client-codepipeline";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { Env } from "deno_slack_sdk/types.ts";
 import { Octokit } from "@octokit/rest";
 
+const userAgentProvider = (): Promise<Array<[string, string]>> =>
+  Promise.resolve([["", ""]]);
+
 export interface ServiceInfo {
-  service_name: string;
-  service_title: string;
-  service_description: string;
-  repository_owner: string;
-  repository_name: string;
-  order: number;
+  physicalResourceId: string;
+  githubRepositoryOwner: string;
+  githubRepositoryName: string;
+  pipelineArn: string;
+  pipelineName: string;
+  actionName: string;
+  serviceName: string;
 }
+
+const TABLE_NAME = "slack-app-release-services";
 
 export class Client {
   public constructor(private readonly env: Env) {}
@@ -22,8 +28,7 @@ export class Client {
   public async getServices() {
     const response = await this.dynamodb.send(
       new ScanCommand({
-        TableName: "gonow-services",
-        IndexName: "info",
+        TableName: TABLE_NAME,
       }),
     );
 
@@ -37,8 +42,8 @@ export class Client {
     const tags: Array<{ order: number[]; name: string }> = [];
     for (let page = 1; true; page++) {
       const response = await this.github.repos.listTags({
-        owner: service.repository_owner,
-        repo: service.repository_name,
+        owner: service.githubRepositoryOwner,
+        repo: service.githubRepositoryName,
         page,
       });
       if (response.status !== 200 || response.data.length === 0) {
@@ -49,7 +54,7 @@ export class Client {
         const match = item.name.match(/^v([0-9]+)\.([0-9]+)\.([0-9]+)$/);
         if (match != null) {
           const version = match.slice(1).map((v) => parseInt(v, 10));
-          tags.push({ order: version, name: version.join(".") });
+          tags.push({ order: version, name: item.name });
         }
       }
     }
@@ -64,46 +69,72 @@ export class Client {
     }).map((item) => item.name);
   }
 
+  public async release(serviceName: string, version: string) {
+    const service = await this.findServiceByName(serviceName);
+    const commitId = await this.getCommitIdForTag(service, version);
+
+    const response = await this.codepipeline.send(
+      new StartPipelineExecutionCommand({
+        name: service.pipelineName,
+        sourceRevisions: [{
+          actionName: service.actionName,
+          revisionType: "COMMIT_ID",
+          revisionValue: commitId,
+        }],
+      }),
+    );
+
+    return { pipelineExecutionId: response.pipelineExecutionId };
+  }
+
   private async findServiceByName(serviceName: string) {
     const response = await this.dynamodb.send(
-      new GetCommand({
-        TableName: "gonow-services",
-        Key: {
-          service_name: serviceName,
-          key: "info",
+      new ScanCommand({
+        TableName: TABLE_NAME,
+        ScanFilter: {
+          serviceName: {
+            ComparisonOperator: "EQ",
+            AttributeValueList: [serviceName],
+          },
         },
       }),
     );
-    return response.Item as ServiceInfo;
+    return response.Items?.[0] as ServiceInfo;
   }
 
-  private _dynamodb!: DynamoDBDocumentClient;
+  private async getCommitIdForTag(service: ServiceInfo, version: string) {
+    const response = await this.github.repos.getCommit({
+      owner: service.githubRepositoryOwner,
+      repo: service.githubRepositoryName,
+      ref: `tags/${version}`,
+    });
+
+    return response.data.sha;
+  }
+
+  private get awsConfig() {
+    return {
+      region: this.env.X_AWS_REGION,
+      credentials: {
+        accessKeyId: this.env.X_AWS_ACCESS_KEY_ID,
+        secretAccessKey: this.env.X_AWS_SECRET_ACCESS_KEY,
+      },
+      // avoid os access
+      defaultUserAgentProvider: userAgentProvider,
+    };
+  }
 
   private get dynamodb(): DynamoDBDocumentClient {
-    if (this._dynamodb == null) {
-      this._dynamodb = DynamoDBDocumentClient.from(
-        new DynamoDBClient({
-          region: this.env.X_AWS_REGION,
-          credentials: {
-            accessKeyId: this.env.X_AWS_ACCESS_KEY_ID,
-            secretAccessKey: this.env.X_AWS_SECRET_ACCESS_KEY,
-          },
-          // avoid os access
-          defaultUserAgentProvider: () => Promise.resolve([["", ""]]),
-        }),
-      );
-    }
-
-    return this._dynamodb;
+    return DynamoDBDocumentClient.from(
+      new DynamoDBClient(this.awsConfig),
+    );
   }
 
-  private _github!: Octokit;
+  private get codepipeline() {
+    return new CodePipelineClient(this.awsConfig);
+  }
 
   private get github(): Octokit {
-    if (this._github == null) {
-      this._github = new Octokit({ auth: this.env.X_GITHUB_TOKEN });
-    }
-
-    return this._github;
+    return new Octokit({ auth: this.env.X_GITHUB_TOKEN });
   }
 }

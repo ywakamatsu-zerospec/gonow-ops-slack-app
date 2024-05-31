@@ -27,6 +27,7 @@
   },
   "lock": false,
   "imports": {
+    "@aws-sdk/client-codepipeline": "npm:@aws-sdk/client-codepipeline@3.540.0",
     "@aws-sdk/client-dynamodb": "npm:@aws-sdk/client-dynamodb@3.540.0",
     "@aws-sdk/lib-dynamodb": "npm:@aws-sdk/lib-dynamodb@3.540.0",
     "@octokit/rest": "npm:@octokit/rest@20.0.2",

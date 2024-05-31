@@ -1,6 +1,7 @@
 import { DefineWorkflow, Schema } from "deno_slack_sdk/mod.ts";
 import { GetServices } from "../functions/get_services.ts";
 import { GetVersions } from "../functions/get_versions.ts";
+import { Release } from "../functions/release.ts";
 
 const ReleaseWorkflow = DefineWorkflow({
   callback_id: "release_gonow",
@@ -67,6 +68,14 @@ const versionSelection = ReleaseWorkflow.addStep(
       }],
       required: ["version"],
     },
+  },
+);
+
+ReleaseWorkflow.addStep(
+  Release,
+  {
+    serviceName: serviceSelection.outputs.fields.serviceName,
+    version: versionSelection.outputs.fields.version,
   },
 );
 
