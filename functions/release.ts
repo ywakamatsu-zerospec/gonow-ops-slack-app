@@ -21,7 +21,7 @@ export const Release = DefineFunction({
   },
   output_parameters: {
     properties: {
-      executionUrl: {
+      pipelineExecutionId: {
         type: Schema.types.string,
       },
     },
@@ -42,12 +42,12 @@ export default SlackFunction(
       const { serviceName, version } = inputs;
       const client = new Client(env);
 
-      const response = await client.release(serviceName, version);
+      const pipelineExecutionId = await client.release(serviceName, version);
 
-      console.log("リリースが開始されました。");
+      console.log("リリースが開始されました。", pipelineExecutionId);
       return {
         outputs: {
-          executionUrl: response.pipelineExecutionId,
+          pipelineExecutionId: pipelineExecutionId,
         },
       };
     } catch (e) {

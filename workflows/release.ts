@@ -71,11 +71,20 @@ const versionSelection = ReleaseWorkflow.addStep(
   },
 );
 
-ReleaseWorkflow.addStep(
+const release = ReleaseWorkflow.addStep(
   Release,
   {
     serviceName: serviceSelection.outputs.fields.serviceName,
     version: versionSelection.outputs.fields.version,
+  },
+);
+
+ReleaseWorkflow.addStep(
+  Schema.slack.functions.SendMessage,
+  {
+    channel_id: ReleaseWorkflow.inputs.channel,
+    message:
+      `:open_hands: ${release.outputs.pipelineExecutionId}が実行されました。`,
   },
 );
 

@@ -20,9 +20,7 @@ export default Manifest({
     PostIssueMessage,
   ],
   outgoingDomains: [
-    "codepipeline.ap-northeast-1.amazonaws.com",
-    "dynamodb.ap-northeast-1.amazonaws.com",
-    "api.github.com",
+    "slack-app-release-api.app2.5-now.com",
   ],
   botScopes: ["commands", "chat:write", "chat:write.public"],
 });

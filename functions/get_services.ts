@@ -44,18 +44,6 @@ export default SlackFunction(
     try {
       const client = new Client(env);
       const services = await client.getServices();
-      services.sort((a, b) => {
-        const na = a.serviceName;
-        const nb = b.serviceName;
-
-        if (na === nb) {
-          return 0;
-        } else if (na < nb) {
-          return -1;
-        } else {
-          return +1;
-        }
-      });
 
       console.log("%d件のサービスを取得しました。", services.length);
       return {
